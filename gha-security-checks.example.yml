@@ -1,0 +1,20 @@
+mode: audit
+
+scanners:
+  php: true
+  osv: true
+  secrets: true
+  githubActions: true
+
+php:
+  composerAudit: true
+  composerOutdated: true
+  abandonedPackages: true
+
+outputs:
+  json: security-results.json
+  markdown: security-summary.md
+  sarif: security-results.sarif
+  githubSummary: true
+  prComment: true
+  annotations: true

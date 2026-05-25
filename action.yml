@@ -1,0 +1,69 @@
+name: GHA Security Checks
+description: Reusable security audit checks for GitHub Actions and CI workflows.
+author: lavluda
+inputs:
+  mode:
+    description: Policy mode: audit, warn, fail-on-high, fail-on-critical, strict, or custom.
+    required: false
+    default: audit
+  config:
+    description: Optional path to a gha-security-checks YAML config file.
+    required: false
+  cwd:
+    description: Repository root to scan.
+    required: false
+    default: "."
+  github-token:
+    description: Token used to create or update pull request comments.
+    required: false
+    default: ${{ github.token }}
+  comment:
+    description: Create or update a pull request audit comment when running on a pull request.
+    required: false
+    default: "true"
+  summary:
+    description: Write the audit report to the GitHub Actions job summary.
+    required: false
+    default: "true"
+  annotations:
+    description: Emit GitHub Actions annotations for findings.
+    required: false
+    default: "true"
+  json-report:
+    description: JSON report path.
+    required: false
+    default: security-results.json
+  json-report-enabled:
+    description: Enable JSON report output.
+    required: false
+    default: "true"
+  markdown-report:
+    description: Markdown report path.
+    required: false
+    default: security-summary.md
+  markdown-report-enabled:
+    description: Enable Markdown report output.
+    required: false
+    default: "true"
+  sarif-report:
+    description: SARIF report path.
+    required: false
+    default: security-results.sarif
+  sarif-report-enabled:
+    description: Enable SARIF report output.
+    required: false
+    default: "true"
+outputs:
+  failed:
+    description: Whether the configured policy failed.
+  findings:
+    description: Total finding count.
+  json-report:
+    description: JSON report path.
+  markdown-report:
+    description: Markdown report path.
+  sarif-report:
+    description: SARIF report path.
+runs:
+  using: node24
+  main: dist-action/index.js

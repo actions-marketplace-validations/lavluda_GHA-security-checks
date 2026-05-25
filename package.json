@@ -1,0 +1,64 @@
+{
+  "name": "gha-security-checks",
+  "version": "0.1.0",
+  "description": "Reusable security audit engine for GitHub Actions and CI workflows.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "gha-security-checks": "dist/cli/index.js"
+  },
+  "files": [
+    "dist",
+    "docker",
+    "action.yml",
+    "Dockerfile",
+    "gha-security-checks.example.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "prepare:action": "ncc build src/action/main.ts -o dist-action --source-map --license licenses.txt"
+  },
+  "keywords": [
+    "github-actions",
+    "security",
+    "composer",
+    "osv",
+    "sarif",
+    "supply-chain"
+  ],
+  "author": "lavluda",
+  "license": "MIT",
+  "homepage": "https://github.com/lavluda/GHA-security-checks#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lavluda/GHA-security-checks.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lavluda/GHA-security-checks/issues"
+  },
+  "dependencies": {
+    "@actions/core": "^3.0.1",
+    "@actions/exec": "^1.1.1",
+    "@actions/github": "^9.1.1",
+    "commander": "^12.1.0",
+    "yaml": "^2.8.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.28.0",
+    "@types/node": "^24.0.0",
+    "@vercel/ncc": "^0.38.3",
+    "eslint": "^9.28.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
