@@ -17,7 +17,7 @@ export async function publishGitHubReport(
   options: GitHubReportOptions
 ): Promise<void> {
   if (options.annotations) {
-    annotateFindings(result.findings);
+    annotateFindings(result.findings, result.failed);
   }
 
   if (options.jobSummary) {
@@ -66,7 +66,7 @@ export async function publishGitHubReport(
   });
 }
 
-function annotateFindings(findings: Finding[]): void {
+function annotateFindings(findings: Finding[], useErrorAnnotations: boolean): void {
   for (const finding of findings) {
     const annotation = finding.location
       ? {
@@ -78,9 +78,14 @@ function annotateFindings(findings: Finding[]): void {
 
     const message = `${finding.title}: ${finding.description}`;
 
-    if (finding.severity === "critical" || finding.severity === "high") {
+    if (
+      useErrorAnnotations &&
+      (finding.severity === "critical" || finding.severity === "high")
+    ) {
       core.error(message, annotation);
     } else if (finding.severity === "medium" || finding.severity === "low") {
+      core.warning(message, annotation);
+    } else if (finding.severity === "critical" || finding.severity === "high") {
       core.warning(message, annotation);
     } else {
       core.notice(message, annotation);

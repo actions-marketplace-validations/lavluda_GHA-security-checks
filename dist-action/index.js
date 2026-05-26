@@ -50222,7 +50222,7 @@ function getOctokit(token, options, ...additionalPlugins) {
 const prCommentMarker = "<!-- gha-security-checks-report -->";
 async function publishGitHubReport(result, options) {
     if (options.annotations) {
-        annotateFindings(result.findings);
+        annotateFindings(result.findings, result.failed);
     }
     if (options.jobSummary) {
         await summary.addRaw(renderMarkdownReport(result)).write();
@@ -50262,7 +50262,7 @@ async function publishGitHubReport(result, options) {
         body
     });
 }
-function annotateFindings(findings) {
+function annotateFindings(findings, useErrorAnnotations) {
     for (const finding of findings) {
         const annotation = finding.location
             ? {
@@ -50272,10 +50272,14 @@ function annotateFindings(findings) {
             }
             : undefined;
         const message = `${finding.title}: ${finding.description}`;
-        if (finding.severity === "critical" || finding.severity === "high") {
+        if (useErrorAnnotations &&
+            (finding.severity === "critical" || finding.severity === "high")) {
             error(message, annotation);
         }
         else if (finding.severity === "medium" || finding.severity === "low") {
+            warning(message, annotation);
+        }
+        else if (finding.severity === "critical" || finding.severity === "high") {
             warning(message, annotation);
         }
         else {
