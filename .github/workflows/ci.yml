@@ -54,4 +54,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Verify container starts
-        run: docker run --rm gha-security-checks:smoke --help
+        run: |
+          docker run --rm --entrypoint node gha-security-checks:smoke \
+            /app/dist/cli/index.js --version
