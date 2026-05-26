@@ -41,4 +41,32 @@ describe("WorkflowHardeningScanner", () => {
     expect(findings.some((finding) => finding.id.includes("action-unpinned"))).toBe(true);
     expect(findings.some((finding) => finding.id.includes("untrusted-expression"))).toBe(true);
   });
+
+  it("allows scoped write permissions", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "gha-security-checks-"));
+    mkdirSync(join(cwd, ".github", "workflows"), { recursive: true });
+    writeFileSync(
+      join(cwd, ".github", "workflows", "security-audit.yml"),
+      [
+        "on: pull_request",
+        "permissions:",
+        "  contents: read",
+        "  pull-requests: write",
+        "  issues: write",
+        "  security-events: write",
+        "jobs:",
+        "  audit:",
+        "    runs-on: ubuntu-latest",
+        "    steps:",
+        "      - uses: actions/checkout@v4"
+      ].join("\n"),
+      "utf8"
+    );
+
+    const config = loadConfig({ cwd });
+    const scanner = new WorkflowHardeningScanner();
+    const findings = await scanner.scan({ cwd, config, toolRunner });
+
+    expect(findings.some((finding) => finding.id.includes("write-all"))).toBe(false);
+  });
 });

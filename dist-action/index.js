@@ -45504,13 +45504,7 @@ function normalizeEvents(value) {
     return [];
 }
 function hasWriteAllPermissions(value) {
-    if (value === "write-all") {
-        return true;
-    }
-    if (!value || typeof value !== "object") {
-        return false;
-    }
-    return Object.values(value).some((permission) => permission === "write");
+    return value === "write-all";
 }
 function shouldFlagActionRef(uses, allowOfficialTags) {
     if (uses.startsWith("./") || uses.startsWith("docker://")) {

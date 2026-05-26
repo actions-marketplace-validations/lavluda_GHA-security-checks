@@ -167,13 +167,7 @@ function normalizeEvents(value: unknown): string[] {
 }
 
 function hasWriteAllPermissions(value: unknown): boolean {
-  if (value === "write-all") {
-    return true;
-  }
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-  return Object.values(value).some((permission) => permission === "write");
+  return value === "write-all";
 }
 
 function shouldFlagActionRef(uses: string, allowOfficialTags: boolean): boolean {
