@@ -89,8 +89,20 @@ jobs:
       - name: Build npm package
         run: npm run build
 
+      - name: Check npm token
+        id: npm-check
+        run: |
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+            echo "⚠️ NPM_TOKEN not set — skipping npm publish"
+          fi
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Publish to npm
-        if: ${{ secrets.NPM_TOKEN != '' }}
+        if: steps.npm-check.outputs.has_token == 'true'
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
