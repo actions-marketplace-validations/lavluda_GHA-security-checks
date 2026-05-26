@@ -43,6 +43,8 @@ steps:
       mode: audit
 ```
 
+The Docker action pulls the published GHCR image for the release version, so consumer workflows do not rebuild the container on every run.
+
 ## CLI
 
 ```bash

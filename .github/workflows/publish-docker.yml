@@ -1,0 +1,65 @@
+name: "Publish Docker Image"
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish without the v prefix, for example 0.1.0."
+        required: true
+        type: "string"
+
+permissions:
+  contents: "read"
+  packages: "write"
+
+env:
+  IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/gha-security-checks"
+
+jobs:
+  publish:
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v4"
+
+      - name: "Resolve version"
+        id: "version"
+        shell: "bash"
+        run: |
+          set -euo pipefail
+
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="${{ inputs.version }}"
+          fi
+
+          package_version="$(node -p "require('./package.json').version")"
+          if [[ "${version}" != "${package_version}" ]]; then
+            echo "Requested version ${version} does not match package.json version ${package_version}." >&2
+            exit 1
+          fi
+
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "tag=v${version}" >> "${GITHUB_OUTPUT}"
+
+      - name: "Log in to GitHub Container Registry"
+        shell: "bash"
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io \
+            --username "${{ github.actor }}" \
+            --password-stdin
+
+      - name: "Build and publish image"
+        shell: "bash"
+        run: |
+          docker buildx create --use --name "gha-security-checks-builder"
+          docker buildx build \
+            --pull \
+            --platform "linux/amd64" \
+            --tag "${IMAGE_NAME}:${{ steps.version.outputs.version }}" \
+            --tag "${IMAGE_NAME}:${{ steps.version.outputs.tag }}" \
+            --push \
+            .
