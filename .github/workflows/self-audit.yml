@@ -1,0 +1,48 @@
+name: Self Security Audit
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    # Weekly on Monday at 06:00 UTC
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  security-events: write
+
+jobs:
+  audit:
+    name: Security audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Run security checks (PR / push — warn only)
+        if: github.event_name != 'schedule'
+        uses: lavluda/GHA-security-checks@v0.3.0
+        with:
+          mode: warn
+          comment: ${{ github.event_name == 'pull_request' }}
+          summary: true
+          annotations: true
+
+      - name: Run security checks (scheduled — fail on high)
+        if: github.event_name == 'schedule'
+        uses: lavluda/GHA-security-checks@v0.3.0
+        with:
+          mode: fail-on-high
+          comment: false
+          summary: true
+          annotations: true
+
+      - name: Upload SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@45775bd8235c68ba998cffa5171334d58593da47 # v3.28.15
+        with:
+          sarif_file: security-results.sarif
+        continue-on-error: true

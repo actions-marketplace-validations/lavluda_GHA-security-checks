@@ -1,17 +1,23 @@
-ARG NODE_VERSION=24-bookworm-slim
-ARG COMPOSER_VERSION=2
 ARG OSV_SCANNER_VERSION=v2.2.4
 
-FROM composer:${COMPOSER_VERSION} AS composer
+# Pin base images by digest for reproducible builds.
+# To refresh digests run:
+#   docker buildx imagetools inspect node:24-bookworm-slim | grep Digest
+#   docker buildx imagetools inspect composer:2 | grep Digest
 
-FROM node:${NODE_VERSION} AS build
+# tag: composer:2
+FROM composer@sha256:b09bccd91a78fe8a9ab4b33d707b862e8fe54fec17782e32683ad2a69c46867d AS composer
+
+# tag: node:24-bookworm-slim
+FROM node@sha256:242549cd46785b480c832479a730f4f2a20865d61ea2e404fdb2a5c3d3b73ecf AS build
 WORKDIR /app
 COPY package*.json tsconfig.json ./
 RUN npm install
 COPY src ./src
 RUN npm run build
 
-FROM node:${NODE_VERSION}
+# tag: node:24-bookworm-slim
+FROM node@sha256:242549cd46785b480c832479a730f4f2a20865d61ea2e404fdb2a5c3d3b73ecf
 ARG OSV_SCANNER_VERSION
 ARG TARGETARCH
 COPY --from=composer /usr/bin/composer /usr/local/bin/composer

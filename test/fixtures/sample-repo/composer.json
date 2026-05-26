@@ -1,0 +1,6 @@
+{
+  "name": "test/sample-repo",
+  "require": {
+    "symfony/http-foundation": "5.4.0"
+  }
+}

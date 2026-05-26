@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import { runSecurityCheck, type PolicyMode } from "../index.js";
+import { VERSION, COMMIT } from "../core/version.js";
 
 const program = new Command();
 
 program
   .name("gha-security-checks")
   .description("Run security audit checks for GitHub Actions and CI workflows.")
+  .version(`${VERSION} (${COMMIT})`, "-v, --version")
   .option("-c, --config <path>", "Path to a security check config file")
   .option("--cwd <path>", "Repository root to scan", process.cwd())
   .option(

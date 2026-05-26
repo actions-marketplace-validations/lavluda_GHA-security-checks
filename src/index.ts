@@ -53,4 +53,5 @@ export * from "./core/config.js";
 export * from "./core/finding.js";
 export * from "./core/scanner.js";
 export * from "./core/scanner-engine.js";
+export * from "./core/version.js";
 export * from "./integrations/tool-runner.js";

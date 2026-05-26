@@ -1,8 +1,10 @@
 import * as core from "@actions/core";
 import { runSecurityCheck, type PolicyMode } from "../index.js";
 import { publishGitHubReport } from "../integrations/github.js";
+import { VERSION, COMMIT } from "../core/version.js";
 
 async function main(): Promise<void> {
+  core.info(`[gha-security-checks] v${VERSION} (${COMMIT})`);
   const args = parseArgs(process.argv.slice(2));
   const mode = input("mode", args) as PolicyMode | undefined;
   const configPath = input("config", args);
