@@ -20,6 +20,7 @@
   "scripts": {
     "prebuild": "node scripts/generate-version.mjs",
     "build": "tsc -p tsconfig.json",
+    "precheck": "node scripts/generate-version.mjs",
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "lint": "eslint .",
