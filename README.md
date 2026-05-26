@@ -2,7 +2,7 @@
 
 Reusable security audit checks for GitHub Actions and CI workflows.
 
-The project is built as a TypeScript library, CLI, JavaScript action, and Docker action. The default mode is `audit`, which reports findings without failing CI.
+The project is built as a TypeScript library, CLI, and Docker-backed GitHub Action. The default mode is `audit`, which reports findings without failing CI.
 
 ## MVP Checks
 
@@ -14,7 +14,7 @@ The project is built as a TypeScript library, CLI, JavaScript action, and Docker
 - JSON, Markdown, and SARIF reports
 - Pull request comment, job summary, and annotations
 
-## JavaScript Action
+## GitHub Action
 
 ```yaml
 permissions:
@@ -25,7 +25,7 @@ permissions:
 
 steps:
   - uses: actions/checkout@v4
-  - uses: lavluda/GHA-security-checks@v1
+  - uses: lavluda/GHA-security-checks@v0.1.1
     with:
       mode: audit
       comment: true
@@ -33,17 +33,7 @@ steps:
       annotations: true
 ```
 
-## Docker Action
-
-```yaml
-steps:
-  - uses: actions/checkout@v4
-  - uses: lavluda/GHA-security-checks/docker@v1
-    with:
-      mode: audit
-```
-
-The Docker action pulls the published GHCR image for the release version, so consumer workflows do not rebuild the container on every run.
+The action pulls the published GHCR image for the release version, so consumer workflows do not rebuild the container on every run. Composer and OSV-Scanner are included in the container.
 
 ## CLI
 
@@ -91,4 +81,4 @@ outputs:
 
 ## Notes
 
-The JavaScript action expects external tools such as Composer and OSV-Scanner to be available on the runner. The Docker action includes Composer and OSV-Scanner.
+Publish the matching Docker image before publishing a release. For example, release `v0.1.1` expects `ghcr.io/lavluda/gha-security-checks:0.1.1` to exist.

@@ -1,6 +1,9 @@
 name: "GHA Security Checks"
-description: "Reusable security audit checks for GitHub Actions and CI workflows."
+description: "Reusable security audit checks for PHP Composer, secrets, vulnerabilities, and workflow risks."
 author: "lavluda"
+branding:
+  icon: "shield"
+  color: "green"
 inputs:
   mode:
     description: "Policy mode: audit, warn, fail-on-high, fail-on-critical, strict, or custom."
@@ -10,9 +13,9 @@ inputs:
     description: "Optional path to a gha-security-checks YAML config file."
     required: false
   cwd:
-    description: "Repository root to scan."
+    description: "Repository root to scan inside the container."
     required: false
-    default: "."
+    default: "/github/workspace"
   github-token:
     description: "Token used to create or update pull request comments."
     required: false
@@ -65,5 +68,32 @@ outputs:
   sarif-report:
     description: "SARIF report path."
 runs:
-  using: "node24"
-  main: "dist-action/index.js"
+  using: "docker"
+  image: "docker://ghcr.io/lavluda/gha-security-checks:0.1.1"
+  args:
+    - "--mode"
+    - "${{ inputs.mode }}"
+    - "--config"
+    - "${{ inputs.config }}"
+    - "--cwd"
+    - "${{ inputs.cwd }}"
+    - "--github-token"
+    - "${{ inputs['github-token'] }}"
+    - "--comment"
+    - "${{ inputs.comment }}"
+    - "--summary"
+    - "${{ inputs.summary }}"
+    - "--annotations"
+    - "${{ inputs.annotations }}"
+    - "--json-report"
+    - "${{ inputs['json-report'] }}"
+    - "--json-report-enabled"
+    - "${{ inputs['json-report-enabled'] }}"
+    - "--markdown-report"
+    - "${{ inputs['markdown-report'] }}"
+    - "--markdown-report-enabled"
+    - "${{ inputs['markdown-report-enabled'] }}"
+    - "--sarif-report"
+    - "${{ inputs['sarif-report'] }}"
+    - "--sarif-report-enabled"
+    - "${{ inputs['sarif-report-enabled'] }}"
