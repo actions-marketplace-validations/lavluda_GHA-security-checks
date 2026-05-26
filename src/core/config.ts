@@ -13,6 +13,7 @@ export const configFileCandidates = [
 
 export const defaultToolCommands = {
   composer: "composer",
+  npm: "npm",
   osvScanner: "osv-scanner"
 } as const;
 
@@ -46,11 +47,12 @@ const configSchema = z.object({
   scanners: z
     .object({
       php: z.boolean().default(true),
+      node: z.boolean().default(true),
       osv: z.boolean().default(true),
       secrets: z.boolean().default(true),
       githubActions: z.boolean().default(true)
     })
-    .default({ php: true, osv: true, secrets: true, githubActions: true }),
+    .default({ php: true, node: true, osv: true, secrets: true, githubActions: true }),
   php: z
     .object({
       composerAudit: z.boolean().default(true),
@@ -58,6 +60,12 @@ const configSchema = z.object({
       abandonedPackages: z.boolean().default(true)
     })
     .default({ composerAudit: true, composerOutdated: true, abandonedPackages: true }),
+  node: z
+    .object({
+      npmAudit: z.boolean().default(true),
+      npmOutdated: z.boolean().default(true)
+    })
+    .default({ npmAudit: true, npmOutdated: true }),
   secrets: z
     .object({
       maxFileBytes: z.number().int().positive().default(1024 * 1024),
@@ -111,6 +119,7 @@ const configSchema = z.object({
   tools: z
     .object({
       composer: z.string().default(defaultToolCommands.composer),
+      npm: z.string().default(defaultToolCommands.npm),
       osvScanner: z.string().default(defaultToolCommands.osvScanner)
     })
     .default(defaultToolCommands),
@@ -140,12 +149,13 @@ export type SecurityCheckConfig = z.infer<typeof configSchema>;
 export type PolicyMode = SecurityCheckConfig["mode"];
 export type SecurityCheckConfigOverrides = Omit<
   Partial<SecurityCheckConfig>,
-  "failOn" | "scanners" | "outputs" | "php" | "secrets" | "githubActions" | "tools"
+  "failOn" | "scanners" | "outputs" | "php" | "node" | "secrets" | "githubActions" | "tools"
 > & {
   failOn?: Partial<SecurityCheckConfig["failOn"]>;
   scanners?: Partial<SecurityCheckConfig["scanners"]>;
   outputs?: Partial<SecurityCheckConfig["outputs"]>;
   php?: Partial<SecurityCheckConfig["php"]>;
+  node?: Partial<SecurityCheckConfig["node"]>;
   secrets?: Partial<SecurityCheckConfig["secrets"]>;
   githubActions?: Partial<SecurityCheckConfig["githubActions"]>;
   tools?: Partial<SecurityCheckConfig["tools"]>;
@@ -173,6 +183,10 @@ export function loadConfig(options: LoadConfigOptions): SecurityCheckConfig {
     php: {
       ...objectValue(fileConfig.php),
       ...options.overrides?.php
+    },
+    node: {
+      ...objectValue(fileConfig.node),
+      ...options.overrides?.node
     },
     secrets: {
       ...objectValue(fileConfig.secrets),

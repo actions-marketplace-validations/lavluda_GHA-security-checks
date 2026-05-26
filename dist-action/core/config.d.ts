@@ -3,6 +3,7 @@ import type { FindingCategory, FindingSeverity } from "./finding.js";
 export declare const configFileCandidates: readonly ["gha-security-checks.yml", "gha-security-checks.yaml", ".gha-security-checks.yml", ".gha-security-checks.yaml"];
 export declare const defaultToolCommands: {
     readonly composer: "composer";
+    readonly npm: "npm";
     readonly osvScanner: "osv-scanner";
 };
 export declare const defaultOutputFiles: {
@@ -25,16 +26,19 @@ declare const configSchema: z.ZodObject<{
     }>>;
     scanners: z.ZodDefault<z.ZodObject<{
         php: z.ZodDefault<z.ZodBoolean>;
+        node: z.ZodDefault<z.ZodBoolean>;
         osv: z.ZodDefault<z.ZodBoolean>;
         secrets: z.ZodDefault<z.ZodBoolean>;
         githubActions: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         php: boolean;
+        node: boolean;
         osv: boolean;
         secrets: boolean;
         githubActions: boolean;
     }, {
         php?: boolean | undefined;
+        node?: boolean | undefined;
         osv?: boolean | undefined;
         secrets?: boolean | undefined;
         githubActions?: boolean | undefined;
@@ -51,6 +55,16 @@ declare const configSchema: z.ZodObject<{
         composerAudit?: boolean | undefined;
         composerOutdated?: boolean | undefined;
         abandonedPackages?: boolean | undefined;
+    }>>;
+    node: z.ZodDefault<z.ZodObject<{
+        npmAudit: z.ZodDefault<z.ZodBoolean>;
+        npmOutdated: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        npmAudit: boolean;
+        npmOutdated: boolean;
+    }, {
+        npmAudit?: boolean | undefined;
+        npmOutdated?: boolean | undefined;
     }>>;
     secrets: z.ZodDefault<z.ZodObject<{
         maxFileBytes: z.ZodDefault<z.ZodNumber>;
@@ -105,12 +119,15 @@ declare const configSchema: z.ZodObject<{
     }>>;
     tools: z.ZodDefault<z.ZodObject<{
         composer: z.ZodDefault<z.ZodString>;
+        npm: z.ZodDefault<z.ZodString>;
         osvScanner: z.ZodDefault<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         composer: string;
+        npm: string;
         osvScanner: string;
     }, {
         composer?: string | undefined;
+        npm?: string | undefined;
         osvScanner?: string | undefined;
     }>>;
     outputs: z.ZodDefault<z.ZodObject<{
@@ -163,6 +180,10 @@ declare const configSchema: z.ZodObject<{
         composerOutdated: boolean;
         abandonedPackages: boolean;
     };
+    node: {
+        npmAudit: boolean;
+        npmOutdated: boolean;
+    };
     secrets: {
         maxFileBytes: number;
         include: string[];
@@ -180,12 +201,14 @@ declare const configSchema: z.ZodObject<{
     };
     scanners: {
         php: boolean;
+        node: boolean;
         osv: boolean;
         secrets: boolean;
         githubActions: boolean;
     };
     tools: {
         composer: string;
+        npm: string;
         osvScanner: string;
     };
     outputs: {
@@ -214,6 +237,10 @@ declare const configSchema: z.ZodObject<{
         composerOutdated?: boolean | undefined;
         abandonedPackages?: boolean | undefined;
     } | undefined;
+    node?: {
+        npmAudit?: boolean | undefined;
+        npmOutdated?: boolean | undefined;
+    } | undefined;
     secrets?: {
         maxFileBytes?: number | undefined;
         include?: string[] | undefined;
@@ -231,12 +258,14 @@ declare const configSchema: z.ZodObject<{
     } | undefined;
     scanners?: {
         php?: boolean | undefined;
+        node?: boolean | undefined;
         osv?: boolean | undefined;
         secrets?: boolean | undefined;
         githubActions?: boolean | undefined;
     } | undefined;
     tools?: {
         composer?: string | undefined;
+        npm?: string | undefined;
         osvScanner?: string | undefined;
     } | undefined;
     outputs?: {
@@ -256,11 +285,12 @@ declare const configSchema: z.ZodObject<{
 }>;
 export type SecurityCheckConfig = z.infer<typeof configSchema>;
 export type PolicyMode = SecurityCheckConfig["mode"];
-export type SecurityCheckConfigOverrides = Omit<Partial<SecurityCheckConfig>, "failOn" | "scanners" | "outputs" | "php" | "secrets" | "githubActions" | "tools"> & {
+export type SecurityCheckConfigOverrides = Omit<Partial<SecurityCheckConfig>, "failOn" | "scanners" | "outputs" | "php" | "node" | "secrets" | "githubActions" | "tools"> & {
     failOn?: Partial<SecurityCheckConfig["failOn"]>;
     scanners?: Partial<SecurityCheckConfig["scanners"]>;
     outputs?: Partial<SecurityCheckConfig["outputs"]>;
     php?: Partial<SecurityCheckConfig["php"]>;
+    node?: Partial<SecurityCheckConfig["node"]>;
     secrets?: Partial<SecurityCheckConfig["secrets"]>;
     githubActions?: Partial<SecurityCheckConfig["githubActions"]>;
     tools?: Partial<SecurityCheckConfig["tools"]>;

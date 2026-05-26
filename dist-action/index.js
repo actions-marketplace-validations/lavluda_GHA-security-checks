@@ -44786,6 +44786,7 @@ const configFileCandidates = [
 ];
 const defaultToolCommands = {
     composer: "composer",
+    npm: "npm",
     osvScanner: "osv-scanner"
 };
 const defaultOutputFiles = {
@@ -44813,17 +44814,23 @@ const configSchema = objectType({
         .default({ severity: "high", categories: [] }),
     scanners: objectType({
         php: booleanType().default(true),
+        node: booleanType().default(true),
         osv: booleanType().default(true),
         secrets: booleanType().default(true),
         githubActions: booleanType().default(true)
     })
-        .default({ php: true, osv: true, secrets: true, githubActions: true }),
+        .default({ php: true, node: true, osv: true, secrets: true, githubActions: true }),
     php: objectType({
         composerAudit: booleanType().default(true),
         composerOutdated: booleanType().default(true),
         abandonedPackages: booleanType().default(true)
     })
         .default({ composerAudit: true, composerOutdated: true, abandonedPackages: true }),
+    node: objectType({
+        npmAudit: booleanType().default(true),
+        npmOutdated: booleanType().default(true)
+    })
+        .default({ npmAudit: true, npmOutdated: true }),
     secrets: objectType({
         maxFileBytes: numberType().int().positive().default(1024 * 1024),
         include: arrayType(stringType()).default([]),
@@ -44870,6 +44877,7 @@ const configSchema = objectType({
         .default({}),
     tools: objectType({
         composer: stringType().default(defaultToolCommands.composer),
+        npm: stringType().default(defaultToolCommands.npm),
         osvScanner: stringType().default(defaultToolCommands.osvScanner)
     })
         .default(defaultToolCommands),
@@ -44906,6 +44914,10 @@ function loadConfig(options) {
         php: {
             ...objectValue(fileConfig.php),
             ...options.overrides?.php
+        },
+        node: {
+            ...objectValue(fileConfig.node),
+            ...options.overrides?.node
         },
         secrets: {
             ...objectValue(fileConfig.secrets),
@@ -45175,6 +45187,159 @@ function normalizeLatestStatus(status) {
     return "info";
 }
 function composer_outdated_parseJson(value) {
+    try {
+        return JSON.parse(value);
+    }
+    catch {
+        return undefined;
+    }
+}
+
+;// CONCATENATED MODULE: ./src/scanners/node/npm-audit.ts
+
+class NpmAuditScanner {
+    name = "npm-audit";
+    async scan(context) {
+        if (!context.config.scanners.node || !context.config.node.npmAudit) {
+            return [];
+        }
+        if (!hasFile(context.cwd, "package.json")) {
+            return [];
+        }
+        const result = await context.toolRunner.run(context.config.tools.npm, ["audit", "--json"], { cwd: context.cwd });
+        if (result.exitCode === 127) {
+            return [
+                {
+                    id: "tooling.npm.missing",
+                    title: "npm is not available",
+                    description: "npm audit was skipped because the configured npm command was not found.",
+                    category: "tooling",
+                    severity: "info",
+                    scanner: this.name,
+                    status: "skipped"
+                }
+            ];
+        }
+        const parsed = npm_audit_parseJson(result.stdout);
+        if (!parsed) {
+            return [];
+        }
+        return Object.entries(parsed.vulnerabilities ?? {}).map(([packageName, vulnerability]) => {
+            const advisory = firstAdvisory(vulnerability);
+            const fixedVersion = fixedVersionFrom(vulnerability.fixAvailable);
+            const reference = advisory?.url ?? vulnerability.url;
+            return {
+                id: `npm.audit.${packageName}`,
+                title: advisory?.title ?? vulnerability.title ?? `Vulnerability in ${packageName}`,
+                description: npm_audit_buildDescription(packageName, vulnerability, advisory),
+                category: "vulnerability",
+                severity: npm_audit_normalizeSeverity(advisory?.severity ?? vulnerability.severity),
+                scanner: this.name,
+                status: "open",
+                packageName: vulnerability.name ?? packageName,
+                fixedVersion,
+                references: reference ? [reference] : undefined,
+                metadata: {
+                    range: advisory?.range ?? vulnerability.range,
+                    fixAvailable: vulnerability.fixAvailable
+                }
+            };
+        });
+    }
+}
+function firstAdvisory(vulnerability) {
+    return vulnerability.via?.find((entry) => typeof entry === "object");
+}
+function npm_audit_buildDescription(packageName, vulnerability, advisory) {
+    const range = advisory?.range ?? vulnerability.range;
+    const parts = [`npm reported a vulnerability for ${packageName}.`];
+    if (range) {
+        parts.push(`Affected versions: ${range}.`);
+    }
+    return parts.join(" ");
+}
+function fixedVersionFrom(value) {
+    if (value && typeof value === "object") {
+        return value.version;
+    }
+    return undefined;
+}
+function npm_audit_normalizeSeverity(value) {
+    const normalized = value?.toLowerCase();
+    if (normalized === "critical" ||
+        normalized === "high" ||
+        normalized === "medium" ||
+        normalized === "low") {
+        return normalized;
+    }
+    return "medium";
+}
+function npm_audit_parseJson(value) {
+    try {
+        return JSON.parse(value);
+    }
+    catch {
+        return undefined;
+    }
+}
+
+;// CONCATENATED MODULE: ./src/scanners/node/npm-outdated.ts
+
+class NpmOutdatedScanner {
+    name = "npm-outdated";
+    async scan(context) {
+        if (!context.config.scanners.node || !context.config.node.npmOutdated) {
+            return [];
+        }
+        if (!hasFile(context.cwd, "package.json")) {
+            return [];
+        }
+        const result = await context.toolRunner.run(context.config.tools.npm, ["outdated", "--json"], { cwd: context.cwd });
+        if (result.exitCode === 127) {
+            return [
+                {
+                    id: "tooling.npm.missing",
+                    title: "npm is not available",
+                    description: "npm outdated checks were skipped because the configured npm command was not found.",
+                    category: "tooling",
+                    severity: "info",
+                    scanner: this.name,
+                    status: "skipped"
+                }
+            ];
+        }
+        const parsed = npm_outdated_parseJson(result.stdout);
+        if (!parsed) {
+            return [];
+        }
+        return Object.entries(parsed)
+            .filter(([, pkg]) => pkg.current && pkg.latest && pkg.current !== pkg.latest)
+            .map(([packageName, pkg]) => ({
+            id: `npm.outdated.${packageName}`,
+            title: `Outdated npm package: ${packageName}`,
+            description: `${packageName} is installed at ${pkg.current} and latest is ${pkg.latest}.`,
+            category: "outdated-dependency",
+            severity: normalizeOutdatedSeverity(pkg),
+            scanner: this.name,
+            status: "open",
+            packageName,
+            installedVersion: pkg.current,
+            fixedVersion: pkg.latest,
+            metadata: {
+                wanted: pkg.wanted,
+                dependent: pkg.dependent,
+                type: pkg.type
+            }
+        }));
+    }
+}
+function normalizeOutdatedSeverity(pkg) {
+    if (pkg.current && pkg.wanted && pkg.current !== pkg.wanted) {
+        return "medium";
+    }
+    return "low";
+}
+function npm_outdated_parseJson(value) {
     try {
         return JSON.parse(value);
     }
@@ -45532,10 +45697,15 @@ function containsUntrustedGithubExpression(value) {
 
 
 
+
+
 function createScanners(config) {
     const scanners = [];
     if (config.scanners.php) {
         scanners.push(new ComposerAuditScanner(), new ComposerOutdatedScanner());
+    }
+    if (config.scanners.node) {
+        scanners.push(new NpmAuditScanner(), new NpmOutdatedScanner());
     }
     if (config.scanners.osv) {
         scanners.push(new OsvScanner());

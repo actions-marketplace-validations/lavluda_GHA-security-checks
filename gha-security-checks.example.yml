@@ -2,6 +2,7 @@ mode: audit
 
 scanners:
   php: true
+  node: true
   osv: true
   secrets: true
   githubActions: true
@@ -10,6 +11,10 @@ php:
   composerAudit: true
   composerOutdated: true
   abandonedPackages: true
+
+node:
+  npmAudit: true
+  npmOutdated: true
 
 outputs:
   json: security-results.json
