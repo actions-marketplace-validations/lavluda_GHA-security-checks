@@ -16,3 +16,4 @@ licenses.txt
 security-results*.json
 security-results*.sarif
 security-summary*.md
+samples/GHA-security-checks-php-sample/

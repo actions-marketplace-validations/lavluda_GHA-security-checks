@@ -1,96 +1,96 @@
-name: GHA Security Checks Docker
-description: Container action for reusable security audit checks.
-author: lavluda
+name: "GHA Security Checks Docker"
+description: "Container action for reusable security audit checks."
+author: "lavluda"
 inputs:
   mode:
-    description: Policy mode: audit, warn, fail-on-high, fail-on-critical, strict, or custom.
+    description: "Policy mode: audit, warn, fail-on-high, fail-on-critical, strict, or custom."
     required: false
-    default: audit
+    default: "audit"
   config:
-    description: Optional path to a gha-security-checks YAML config file.
+    description: "Optional path to a gha-security-checks YAML config file."
     required: false
   cwd:
-    description: Repository root to scan inside the container.
+    description: "Repository root to scan inside the container."
     required: false
-    default: /github/workspace
+    default: "/github/workspace"
   github-token:
-    description: Token used to create or update pull request comments.
+    description: "Token used to create or update pull request comments."
     required: false
-    default: ${{ github.token }}
+    default: "${{ github.token }}"
   comment:
-    description: Create or update a pull request audit comment when running on a pull request.
+    description: "Create or update a pull request audit comment when running on a pull request."
     required: false
     default: "true"
   summary:
-    description: Write the audit report to the GitHub Actions job summary.
+    description: "Write the audit report to the GitHub Actions job summary."
     required: false
     default: "true"
   annotations:
-    description: Emit GitHub Actions annotations for findings.
+    description: "Emit GitHub Actions annotations for findings."
     required: false
     default: "true"
   json-report:
-    description: JSON report path.
+    description: "JSON report path."
     required: false
-    default: security-results.json
+    default: "security-results.json"
   json-report-enabled:
-    description: Enable JSON report output.
+    description: "Enable JSON report output."
     required: false
     default: "true"
   markdown-report:
-    description: Markdown report path.
+    description: "Markdown report path."
     required: false
-    default: security-summary.md
+    default: "security-summary.md"
   markdown-report-enabled:
-    description: Enable Markdown report output.
+    description: "Enable Markdown report output."
     required: false
     default: "true"
   sarif-report:
-    description: SARIF report path.
+    description: "SARIF report path."
     required: false
-    default: security-results.sarif
+    default: "security-results.sarif"
   sarif-report-enabled:
-    description: Enable SARIF report output.
+    description: "Enable SARIF report output."
     required: false
     default: "true"
 outputs:
   failed:
-    description: Whether the configured policy failed.
+    description: "Whether the configured policy failed."
   findings:
-    description: Total finding count.
+    description: "Total finding count."
   json-report:
-    description: JSON report path.
+    description: "JSON report path."
   markdown-report:
-    description: Markdown report path.
+    description: "Markdown report path."
   sarif-report:
-    description: SARIF report path.
+    description: "SARIF report path."
 runs:
-  using: docker
-  image: ../Dockerfile
+  using: "docker"
+  image: "../Dockerfile"
   args:
-    - --mode
-    - ${{ inputs.mode }}
-    - --config
-    - ${{ inputs.config }}
-    - --cwd
-    - ${{ inputs.cwd }}
-    - --github-token
-    - ${{ inputs.github-token }}
-    - --comment
-    - ${{ inputs.comment }}
-    - --summary
-    - ${{ inputs.summary }}
-    - --annotations
-    - ${{ inputs.annotations }}
-    - --json-report
-    - ${{ inputs.json-report }}
-    - --json-report-enabled
-    - ${{ inputs.json-report-enabled }}
-    - --markdown-report
-    - ${{ inputs.markdown-report }}
-    - --markdown-report-enabled
-    - ${{ inputs.markdown-report-enabled }}
-    - --sarif-report
-    - ${{ inputs.sarif-report }}
-    - --sarif-report-enabled
-    - ${{ inputs.sarif-report-enabled }}
+    - "--mode"
+    - "${{ inputs.mode }}"
+    - "--config"
+    - "${{ inputs.config }}"
+    - "--cwd"
+    - "${{ inputs.cwd }}"
+    - "--github-token"
+    - "${{ inputs['github-token'] }}"
+    - "--comment"
+    - "${{ inputs.comment }}"
+    - "--summary"
+    - "${{ inputs.summary }}"
+    - "--annotations"
+    - "${{ inputs.annotations }}"
+    - "--json-report"
+    - "${{ inputs['json-report'] }}"
+    - "--json-report-enabled"
+    - "${{ inputs['json-report-enabled'] }}"
+    - "--markdown-report"
+    - "${{ inputs['markdown-report'] }}"
+    - "--markdown-report-enabled"
+    - "${{ inputs['markdown-report-enabled'] }}"
+    - "--sarif-report"
+    - "${{ inputs['sarif-report'] }}"
+    - "--sarif-report-enabled"
+    - "${{ inputs['sarif-report-enabled'] }}"
