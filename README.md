@@ -81,7 +81,3 @@ outputs:
   prComment: true
   annotations: true
 ```
-
-## Notes
-
-Publish the matching Docker image before publishing a release. For example, release `v0.2.0` expects `ghcr.io/lavluda/gha-security-checks:0.2.0` to exist.
