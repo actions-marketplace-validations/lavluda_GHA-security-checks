@@ -8,7 +8,7 @@ export interface PolicyDecision {
 }
 
 export function evaluatePolicy(findings: Finding[], config: SecurityCheckConfig): PolicyDecision {
-  if (config.mode === "audit" || config.mode === "warn") {
+  if (config.mode === "audit" || config.mode === "warn" || config.mode === "diff") {
     return { failed: false, blockingFindings: [] };
   }
 

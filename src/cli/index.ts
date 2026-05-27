@@ -2,18 +2,26 @@
 import { Command } from "commander";
 import { runSecurityCheck, type PolicyMode } from "../index.js";
 import { VERSION, COMMIT } from "../core/version.js";
+import { saveBaseline } from "../core/baseline.js";
+import { addSuppression, listSuppressions, removeSuppression } from "../core/config-editor.js";
 
 const program = new Command();
 
 program
   .name("gha-security-checks")
   .description("Run security audit checks for GitHub Actions and CI workflows.")
-  .version(`${VERSION} (${COMMIT})`, "-v, --version")
+  .version(`${VERSION} (${COMMIT})`, "-v, --version");
+
+// ─── Main scan command ────────────────────────────────────────────────────────
+
+program
+  .command("scan", { isDefault: true })
+  .description("Run security checks (default command).")
   .option("-c, --config <path>", "Path to a security check config file")
   .option("--cwd <path>", "Repository root to scan", process.cwd())
   .option(
     "--mode <mode>",
-    "Policy mode: audit, warn, fail-on-high, fail-on-critical, strict, custom"
+    "Policy mode: audit, diff, warn, fail-on-high, fail-on-critical, strict, custom"
   )
   .option("--no-json", "Disable JSON report output")
   .option("--no-markdown", "Disable Markdown report output")
@@ -47,6 +55,114 @@ program
 
     if (result.failed) {
       process.exitCode = 1;
+    }
+  });
+
+// ─── Baseline subcommands ─────────────────────────────────────────────────────
+
+const baselineCmd = program.command("baseline").description("Manage the findings baseline.");
+
+baselineCmd
+  .command("update")
+  .description(
+    "Run a full scan and write all open findings to the baseline file. " +
+    "On future runs, these findings will be suppressed."
+  )
+  .option("-c, --config <path>", "Path to a security check config file")
+  .option("--cwd <path>", "Repository root to scan", process.cwd())
+  .option("--file <path>", "Baseline file path", "security-baseline.json")
+  .action(async (options) => {
+    const { result } = await runSecurityCheck({
+      cwd: options.cwd,
+      configPath: options.config,
+      overrides: { mode: "audit", outputs: { json: false, markdown: false, sarif: false } }
+    });
+
+    saveBaseline(options.cwd, options.file, result.findings);
+
+    const openCount = result.findings.filter((f) => f.status === "open").length;
+    console.log(`Baseline written to ${options.file} — ${openCount} finding(s) suppressed.`);
+    console.log("Future runs will only surface findings introduced after this baseline.");
+  });
+
+// ─── Suppression subcommands ──────────────────────────────────────────────────
+
+const suppressionsCmd = program
+  .command("suppressions")
+  .description("Manage finding suppressions in the config file.");
+
+suppressionsCmd
+  .command("add <id>")
+  .alias("suppress")
+  .description("Add a suppression for a finding ID to the config file.")
+  .option("-c, --config <path>", "Path to the config file to modify")
+  .option("--cwd <path>", "Repository root", process.cwd())
+  .option("--reason <reason>", "Human-readable reason for suppression")
+  .option("--category <category>", "Suppress all findings of this category instead")
+  .option("--path <path>", "Suppress findings at this file path only")
+  .action((id, options) => {
+    const filePath = addSuppression(
+      options.cwd,
+      {
+        id: options.category ? undefined : id,
+        category: options.category,
+        path: options.path,
+        reason: options.reason
+      },
+      options.config
+    );
+    console.log(`Suppression added to ${filePath}`);
+  });
+
+// Top-level alias: gha-security-checks suppress <id>
+program
+  .command("suppress <id>")
+  .description("Shorthand for suppressions add <id>.")
+  .option("-c, --config <path>", "Path to the config file to modify")
+  .option("--cwd <path>", "Repository root", process.cwd())
+  .option("--reason <reason>", "Human-readable reason for suppression")
+  .action((id, options) => {
+    const filePath = addSuppression(
+      options.cwd,
+      { id, reason: options.reason },
+      options.config
+    );
+    console.log(`Suppression added to ${filePath}`);
+  });
+
+suppressionsCmd
+  .command("list")
+  .description("List all suppressions in the config file.")
+  .option("-c, --config <path>", "Path to the config file")
+  .option("--cwd <path>", "Repository root", process.cwd())
+  .action((options) => {
+    const suppressions = listSuppressions(options.cwd, options.config);
+    if (suppressions.length === 0) {
+      console.log("No suppressions configured.");
+      return;
+    }
+    console.log(`${suppressions.length} suppression(s):\n`);
+    for (const s of suppressions) {
+      const parts = [];
+      if (s.id) parts.push(`id: ${s.id}`);
+      if (s.category) parts.push(`category: ${s.category}`);
+      if (s.path) parts.push(`path: ${s.path}`);
+      if (s.reason) parts.push(`reason: ${s.reason}`);
+      console.log(`  - ${parts.join(", ")}`);
+    }
+  });
+
+suppressionsCmd
+  .command("remove <id>")
+  .description("Remove suppressions matching the given ID from the config file.")
+  .option("-c, --config <path>", "Path to the config file to modify")
+  .option("--cwd <path>", "Repository root", process.cwd())
+  .action((id, options) => {
+    const { filePath, removed } = removeSuppression(options.cwd, id, options.config);
+    if (removed === 0) {
+      console.log(`No suppression found with id: ${id}`);
+    } else {
+      console.log(`Removed ${removed} suppression(s) from ${filePath}`);
     }
   });
 

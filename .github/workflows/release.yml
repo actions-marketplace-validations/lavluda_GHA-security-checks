@@ -86,8 +86,15 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build npm package
-        run: npm run build
+      - name: Build npm package and JS action bundle
+        run: npm run build && npm run prepare:action
+
+      - name: Commit dist-action bundle
+        run: |
+          git add dist-action/index.js dist-action/index.js.map dist-action/sourcemap-register.cjs dist-action/licenses.txt dist-action/package.json || true
+          git diff --cached --quiet || git commit -m "chore(release): update dist-action bundle for ${{ steps.version.outputs.tag }} [skip ci]"
+          git tag -f "${{ steps.version.outputs.tag }}"
+          git push origin "${{ steps.version.outputs.tag }}" --force
 
       - name: Check npm token
         id: npm-check

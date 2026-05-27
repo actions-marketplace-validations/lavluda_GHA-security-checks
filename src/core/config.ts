@@ -36,7 +36,7 @@ const categorySchema = z.enum([
 const configSchema = z.object({
   root: z.string().default("."),
   mode: z
-    .enum(["audit", "warn", "fail-on-high", "fail-on-critical", "strict", "custom"])
+    .enum(["audit", "diff", "warn", "fail-on-high", "fail-on-critical", "strict", "custom"])
     .default("audit"),
   failOn: z
     .object({
@@ -133,6 +133,7 @@ const configSchema = z.object({
       annotations: z.boolean().default(true)
     })
     .default({}),
+  baseline: z.string().optional(),
   suppressions: z
     .array(
       z.object({

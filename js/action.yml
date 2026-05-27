@@ -1,9 +1,13 @@
-name: "GHA Security Checks"
-description: "Reusable security audit checks for PHP Composer, secrets, vulnerabilities, and workflow risks."
+name: "GHA Security Checks (JS)"
+description: >
+  Reusable security audit checks for PHP Composer, secrets, vulnerabilities, and workflow risks.
+  JS variant — no Docker pull. Requires language toolchains (composer, npm) to already be
+  installed in the runner. Use the top-level action for a batteries-included Docker experience.
 author: "lavluda"
 branding:
   icon: "shield"
   color: "green"
+
 inputs:
   mode:
     description: "Policy mode: audit, diff, warn, fail-on-high, fail-on-critical, strict, or custom."
@@ -13,9 +17,9 @@ inputs:
     description: "Optional path to a gha-security-checks YAML config file."
     required: false
   cwd:
-    description: "Repository root to scan inside the container."
+    description: "Repository root to scan."
     required: false
-    default: "/github/workspace"
+    default: "."
   github-token:
     description: "Token used to create or update pull request comments."
     required: false
@@ -56,6 +60,7 @@ inputs:
     description: "Enable SARIF report output."
     required: false
     default: "true"
+
 outputs:
   failed:
     description: "Whether the configured policy failed."
@@ -67,33 +72,7 @@ outputs:
     description: "Markdown report path."
   sarif-report:
     description: "SARIF report path."
+
 runs:
-  using: "docker"
-  image: "docker://ghcr.io/lavluda/gha-security-checks:__VERSION__"
-  args:
-    - "--mode"
-    - "${{ inputs.mode }}"
-    - "--config"
-    - "${{ inputs.config }}"
-    - "--cwd"
-    - "${{ inputs.cwd }}"
-    - "--github-token"
-    - "${{ inputs['github-token'] }}"
-    - "--comment"
-    - "${{ inputs.comment }}"
-    - "--summary"
-    - "${{ inputs.summary }}"
-    - "--annotations"
-    - "${{ inputs.annotations }}"
-    - "--json-report"
-    - "${{ inputs['json-report'] }}"
-    - "--json-report-enabled"
-    - "${{ inputs['json-report-enabled'] }}"
-    - "--markdown-report"
-    - "${{ inputs['markdown-report'] }}"
-    - "--markdown-report-enabled"
-    - "${{ inputs['markdown-report-enabled'] }}"
-    - "--sarif-report"
-    - "${{ inputs['sarif-report'] }}"
-    - "--sarif-report-enabled"
-    - "${{ inputs['sarif-report-enabled'] }}"
+  using: "node20"
+  main: "../dist-action/index.js"

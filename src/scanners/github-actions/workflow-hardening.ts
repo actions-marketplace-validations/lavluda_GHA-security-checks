@@ -26,7 +26,14 @@ export class WorkflowHardeningScanner implements Scanner {
       return [];
     }
 
-    const files = listWorkflowFiles(context.cwd, context.config.githubActions.workflowDir);
+    const allFiles = listWorkflowFiles(context.cwd, context.config.githubActions.workflowDir);
+
+    // In diff mode, only check workflow files that were changed
+    const files =
+      context.changedFiles !== undefined
+        ? allFiles.filter((f) => context.changedFiles!.has(f))
+        : allFiles;
+
     const findings: Finding[] = [];
 
     for (const file of files) {

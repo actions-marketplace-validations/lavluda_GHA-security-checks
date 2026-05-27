@@ -17,11 +17,17 @@ export class SecretScanner implements Scanner {
       expression: new RegExp(pattern.regex, "gi")
     }));
 
-    const files = listFiles({
+    const allFiles = listFiles({
       root: context.cwd,
       exclude: context.config.secrets.exclude,
       maxFileBytes: context.config.secrets.maxFileBytes
     });
+
+    // In diff mode, only scan files that were changed
+    const files =
+      context.changedFiles !== undefined
+        ? allFiles.filter((f) => context.changedFiles!.has(f))
+        : allFiles;
 
     const findings: Finding[] = [];
 

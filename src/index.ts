@@ -8,6 +8,7 @@ import { createScanners } from "./core/create-scanners.js";
 import { ScannerEngine } from "./core/scanner-engine.js";
 import type { ScanResult } from "./core/finding.js";
 import { writeConfiguredReports, type WrittenReports } from "./core/output.js";
+import { getChangedFiles } from "./core/diff.js";
 import { ChildProcessToolRunner, type ToolRunner } from "./integrations/tool-runner.js";
 
 export interface RunSecurityCheckOptions {
@@ -38,10 +39,15 @@ export async function runSecurityCheck(
   });
 
   const engine = new ScannerEngine(createScanners(config));
+
+  // In diff mode, resolve changed files so scanners can limit their scope
+  const changedFiles = config.mode === "diff" ? getChangedFiles(cwd) : undefined;
+
   const result = await engine.run({
     cwd,
     config,
-    toolRunner: options.toolRunner ?? new ChildProcessToolRunner()
+    toolRunner: options.toolRunner ?? new ChildProcessToolRunner(),
+    changedFiles
   });
 
   const reports = options.writeReports === false ? {} : writeConfiguredReports(result, config, cwd);
@@ -49,7 +55,9 @@ export async function runSecurityCheck(
   return { config, result, reports };
 }
 
+export * from "./core/baseline.js";
 export * from "./core/config.js";
+export * from "./core/diff.js";
 export * from "./core/finding.js";
 export * from "./core/scanner.js";
 export * from "./core/scanner-engine.js";

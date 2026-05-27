@@ -32,6 +32,14 @@ export class ComposerAuditScanner implements Scanner {
       return [];
     }
 
+    // In diff mode, skip if no PHP manifest was changed
+    if (context.changedFiles !== undefined) {
+      const manifests = ["composer.json", "composer.lock"];
+      if (!manifests.some((m) => context.changedFiles!.has(m))) {
+        return [];
+      }
+    }
+
     const result = await context.toolRunner.run(
       context.config.tools.composer,
       ["audit", "--format=json", "--no-interaction"],

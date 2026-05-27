@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-27
+
+### Added
+- `diff` mode: scanners limit scope to changed files only (secret scanner, workflow hardening, dependency scanners all filter by `changedFiles`)
+- `changedFiles` context field on `ScannerContext` — populated from `GITHUB_BASE_REF` or `git merge-base HEAD origin/main` in diff mode
+- `baseline` config option: suppress pre-existing findings; `baseline update` CLI command writes the current findings to a baseline file
+- `gha-security-checks baseline update` — runs a full scan and writes all open findings to baseline
+- `gha-security-checks suppress <id> --reason` and `suppressions add/list/remove` CLI subcommands
+- JS action variant at `js/action.yml` (node20, no Docker pull) for repos with toolchains pre-installed
+- PR comment delta view: **New** / **Fixed since last run** / **Still open** sections; finding IDs persisted in HTML comment for cross-run diffing; 60KB truncation guard
+- `src/core/diff.ts`, `src/core/baseline.ts`, `src/core/config-editor.ts` — new core modules
+- Release workflow now builds and commits `dist-action/` bundle so JS action always matches the tag
+- 14 new tests (baseline round-trips, diff-mode scanner filtering, scanner context propagation) — 68 total
+
 ## [0.3.0] - 2026-05-27
 
 ### Added
@@ -50,7 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI (`npx gha-security-checks`)
 - Docker-backed GitHub Action published to GitHub Marketplace
 
-[Unreleased]: https://github.com/lavluda/GHA-security-checks/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/lavluda/GHA-security-checks/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/lavluda/GHA-security-checks/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/lavluda/GHA-security-checks/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/lavluda/GHA-security-checks/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/lavluda/GHA-security-checks/releases/tag/v0.1.0

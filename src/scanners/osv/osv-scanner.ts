@@ -36,6 +36,23 @@ export class OsvScanner implements Scanner {
       return [];
     }
 
+    // In diff mode, skip if no lockfile was changed
+    if (context.changedFiles !== undefined) {
+      const lockfiles = [
+        "composer.lock",
+        "package-lock.json",
+        "yarn.lock",
+        "pnpm-lock.yaml",
+        "Pipfile.lock",
+        "Gemfile.lock",
+        "go.sum",
+        "Cargo.lock"
+      ];
+      if (!lockfiles.some((f) => context.changedFiles!.has(f))) {
+        return [];
+      }
+    }
+
     const result = await context.toolRunner.run(
       context.config.tools.osvScanner,
       ["scan", "source", "--format=json", "--recursive", context.cwd],

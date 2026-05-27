@@ -28,6 +28,14 @@ export class NpmAuditScanner implements Scanner {
       return [];
     }
 
+    // In diff mode, skip if no Node manifest was changed
+    if (context.changedFiles !== undefined) {
+      const manifests = ["package.json", "package-lock.json", "yarn.lock", "pnpm-lock.yaml"];
+      if (!manifests.some((m) => context.changedFiles!.has(m))) {
+        return [];
+      }
+    }
+
     const result = await context.toolRunner.run(
       context.config.tools.npm,
       ["audit", "--json"],
